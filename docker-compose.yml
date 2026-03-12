@@ -80,7 +80,7 @@ services:
     networks:
       - url-shortener-net
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
+      test: ["CMD", "bash", "-c", "echo ruok | nc 108.129.175.80 2181"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,7 +121,7 @@ services:
           "CMD",
           "kafka-topics",
           "--bootstrap-server",
-          "localhost:9092",
+          "108.129.175.80:9092",
           "--list",
         ]
       interval: 15s
