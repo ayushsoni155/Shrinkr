@@ -1,35 +1,39 @@
-# ── Stage 1: Builder ──────────────────────────────────────────────
+# ── Stage 1: Builder ─────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install build deps
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY package.json package-lock.json ./
 
-# Copy Prisma schema and generate client
+# Install ALL dependencies for build
+RUN npm ci
+
+RUN npm prune --omit=dev
+
+# Copy Prisma schema
 COPY prisma ./prisma
+
+# Generate Prisma client
 RUN npx prisma generate
 
 # Copy application source
 COPY src ./src
 
-# ── Stage 2: Distroless Runtime ───────────────────────────────────
-FROM gcr.io/distroless/nodejs20-debian11
+
+# ── Stage 2: Production Runtime ──────────────────────────────────
+FROM node:20-alpine
 
 WORKDIR /app
-
-# Copy only what's needed from builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/src ./src
-COPY --from=builder /app/prisma ./prisma
-
-# Prisma client needs the generated client files
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 ENV NODE_ENV=production
 ENV PORT=4001
 
+# Copy runtime files
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/prisma ./prisma
+
 EXPOSE 4001
 
-CMD ["src/index.js"]
+CMD ["node", "src/index.js"]
