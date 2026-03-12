@@ -7,8 +7,14 @@ RUN npm ci
 # ── Stage 2: Builder ──────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
+# Copy dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
+
+# Ensure we copy EVERYTHING (including tsconfig.json, next.config.js, etc.)
 COPY . .
+
+# Explicitly check if tsconfig exists (debugging step, can be removed later)
+RUN ls -la tsconfig.json
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
