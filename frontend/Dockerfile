@@ -37,7 +37,7 @@ COPY --from=builder /app/.next/static ./.next/static
 
 # copy public ONLY if it exists
 # (remove this line if your project doesn't use public assets)
-COPY --from=builder /app/public ./public
+# COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 
