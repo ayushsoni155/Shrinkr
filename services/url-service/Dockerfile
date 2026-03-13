@@ -10,7 +10,8 @@ COPY src ./src
 
 
 # ── Stage 2: Distroless Runtime ─────────────────────────────────
-FROM gcr.io/distroless/nodejs20-debian11
+# FROM gcr.io/distroless/nodejs20-debian11
+FROM node:20-alpine
 
 WORKDIR /app
 
