@@ -25,19 +25,19 @@ FROM node:20-slim AS runner
 
 WORKDIR /app
 
-# Install openssl again for the runtime
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV PORT=4001
 
-# Copy only the production node_modules and the generated Prisma client
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/src ./src
-# If you used TypeScript, you'd copy ./dist instead of ./src
 
-# Prune dev dependencies in the final stage to save space
+# --- ADD THIS LINE ---
+COPY --from=builder /app/prisma ./prisma 
+# ---------------------
+
 RUN npm prune --omit=dev
 
 EXPOSE 4001
