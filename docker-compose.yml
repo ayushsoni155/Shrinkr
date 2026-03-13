@@ -93,6 +93,7 @@ services:
     build: ./services/auth-service
     container_name: auth-service
     env_file: .env.prod
+    command: sh -c "npx prisma migrate deploy && node server.js"
     networks:
       - url-shortener-net
 
