@@ -23,6 +23,7 @@ services:
       - frontend
       - auth-service
       - url-service
+      - redirect-service
     networks:
       - url-shortener-net
 
@@ -38,6 +39,9 @@ services:
       - url-shortener-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo:7.0
@@ -53,6 +57,8 @@ services:
       - url-shortener-net
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      retries: 3
 
   redis:
     image: redis:7-alpine
@@ -64,11 +70,15 @@ services:
       - url-shortener-net
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     container_name: zookeeper
     env_file: .env.prod
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     networks:
       - url-shortener-net
     healthcheck:
@@ -76,6 +86,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     container_name: kafka
@@ -87,23 +98,17 @@ services:
       - url-shortener-net
     healthcheck:
       test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      retries: 5
 
   # ─── Backends ───
   auth-service:
     build: ./services/auth-service
     container_name: auth-service
     env_file: .env.prod
+    # Improved migration logic using service_healthy dependency
     command: >
-      sh -c "
-        echo 'Waiting for postgres...'
-        while ! nc -z postgres 5432; do
-          sleep 1
-        done
-        echo 'Postgres is up - executing migrations'
-        npx prisma migrate deploy
-        echo 'Migrations complete - starting server'
-        node server.js
-      "
+      sh -c "npx prisma migrate deploy && node server.js"
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,6 +119,11 @@ services:
     build: ./services/url-service
     container_name: url-service
     env_file: .env.prod
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - url-shortener-net
 
@@ -121,6 +131,9 @@ services:
     build: ./services/redirect-service
     container_name: redirect-service
     env_file: .env.prod
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - url-shortener-net
 
@@ -128,6 +141,11 @@ services:
     build: ./services/analytics-worker
     container_name: analytics-worker
     env_file: .env.prod
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     networks:
       - url-shortener-net
 
@@ -138,5 +156,6 @@ services:
       dockerfile: Dockerfile
     container_name: frontend
     env_file: .env.prod
+    restart: unless-stopped
     networks:
       - url-shortener-net
