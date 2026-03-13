@@ -72,11 +72,10 @@ services:
     networks:
       - url-shortener-net
     healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok || exit 1"]
-      interval: 10s
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 5s
       timeout: 5s
       retries: 5
-
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     container_name: kafka
