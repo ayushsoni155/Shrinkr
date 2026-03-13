@@ -127,3 +127,10 @@ prisma/generated/
 # ─── System ──────────────────────────────────────────────────────────
 .env.*.orig
 *.orig
+shrinkr-key
+shrinkr-key.pub
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform/providers/registry.terraform.io/hashicorp/aws/6.32.1/linux_amd64/LICENSE.txt
+terraform/.terraform/providers/registry.terraform.io/hashicorp/aws/6.32.1/linux_amd64/terraform-provider-aws_v6.32.1_x5
