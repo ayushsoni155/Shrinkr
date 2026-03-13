@@ -108,7 +108,7 @@ services:
     env_file: .env.prod
     # Improved migration logic using service_healthy dependency
     command: >
-      sh -c "npx prisma migrate deploy && node server.js"
+      sh -c "npx prisma db push && node src/index.js"
     depends_on:
       postgres:
         condition: service_healthy
