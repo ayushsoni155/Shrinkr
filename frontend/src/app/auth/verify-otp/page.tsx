@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { apiVerifyOtp, apiResendOtp } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useToast } from '@/hooks/use-toast';
 import { Zap, Mail } from 'lucide-react';
 
 export default function VerifyOtpPage() {
@@ -14,8 +15,7 @@ export default function VerifyOtpPage() {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const { toast } = useToast();
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     function handleChange(index: number, value: string) {
@@ -44,15 +44,30 @@ export default function VerifyOtpPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         const otpStr = otp.join('');
-        if (otpStr.length < 6) { setError('Enter all 6 digits'); return; }
+        if (otpStr.length < 6) { 
+            toast({
+                title: 'Invalid OTP',
+                description: 'Please enter all 6 digits.',
+                variant: 'destructive',
+            });
+            return; 
+        }
         setLoading(true);
-        setError('');
         try {
             const { data } = await apiVerifyOtp(pendingEmail!, otpStr);
+            toast({
+                title: 'Success!',
+                description: 'Email verified successfully.',
+                variant: 'success',
+            });
             setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
             router.push('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+            toast({
+                title: 'Verification Failed',
+                description: err.response?.data?.message || 'Invalid OTP. Please try again.',
+                variant: 'destructive',
+            });
             setOtp(['', '', '', '', '', '']);
             inputRefs.current[0]?.focus();
         } finally {
@@ -65,10 +80,17 @@ export default function VerifyOtpPage() {
         setResendLoading(true);
         try {
             await apiResendOtp(pendingEmail);
-            setSuccess('OTP resent! Check your inbox.');
-            setTimeout(() => setSuccess(''), 4000);
+            toast({
+                title: 'OTP Resent',
+                description: 'A new code has been sent to your inbox.',
+                variant: 'success',
+            });
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to resend OTP.');
+            toast({
+                title: 'Failed to Resend',
+                description: err.response?.data?.message || 'An error occurred.',
+                variant: 'destructive',
+            });
         } finally {
             setResendLoading(false);
         }
@@ -98,13 +120,6 @@ export default function VerifyOtpPage() {
                             <span className="text-white font-medium">{pendingEmail || 'your email'}</span>
                         </p>
                     </div>
-
-                    {error && (
-                        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">{error}</div>
-                    )}
-                    {success && (
-                        <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">{success}</div>
-                    )}
 
                     <form onSubmit={handleSubmit}>
                         <div className="flex gap-3 justify-center mb-6" onPaste={handlePaste}>

@@ -86,6 +86,20 @@ async function verifyOtp(req, res, next) {
 
         await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
 
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
         return res.json({
             success: true,
             message: 'Email verified successfully.',
@@ -129,6 +143,20 @@ async function login(req, res, next) {
 
         await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
 
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
         return res.json({
             success: true,
             message: 'Login successful.',
@@ -144,7 +172,7 @@ async function login(req, res, next) {
  */
 async function refresh(req, res, next) {
     try {
-        const { refreshToken } = req.body;
+        const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
         if (!refreshToken) {
             return res.status(400).json({ success: false, message: 'Refresh token required' });
         }
@@ -168,6 +196,20 @@ async function refresh(req, res, next) {
         const newRefreshToken = generateRefreshToken(payload);
 
         await prisma.user.update({ where: { id: user.id }, data: { refreshToken: newRefreshToken } });
+
+        res.cookie('accessToken', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
 
         return res.json({
             success: true,

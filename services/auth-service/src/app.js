@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
 
@@ -13,11 +14,13 @@ const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 4001;
+app.set('trust proxy', 1);
 
 // ── Security & Middleware ──────────────────────────────────────────
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 app.use(morgan('combined'));
 
 // ── Rate Limiting ──────────────────────────────────────────────────

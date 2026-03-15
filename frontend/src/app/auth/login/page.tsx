@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { apiLogin } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useToast } from '@/hooks/use-toast';
 import { Zap, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
@@ -14,18 +15,26 @@ export default function LoginPage() {
     const [form, setForm] = useState({ email: '', password: '' });
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const { toast } = useToast();
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setLoading(true);
-        setError('');
         try {
             const { data } = await apiLogin(form.email, form.password);
+            toast({
+                title: 'Welcome back!',
+                description: 'You have logged in successfully.',
+                variant: 'success',
+            });
             setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
             router.push('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Login failed. Please try again.');
+            toast({
+                title: 'Login Failed',
+                description: err.response?.data?.message || 'Something went wrong. Please try again.',
+                variant: 'destructive',
+            });
         } finally {
             setLoading(false);
         }
@@ -49,12 +58,6 @@ export default function LoginPage() {
                         <h1 className="text-2xl font-bold text-white">Welcome back</h1>
                         <p className="text-zinc-400 text-sm mt-1">Sign in to your account</p>
                     </div>
-
-                    {error && (
-                        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                            {error}
-                        </div>
-                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>

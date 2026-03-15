@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { apiSignup } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useToast } from '@/hooks/use-toast';
 import { Zap, Eye, EyeOff, Check } from 'lucide-react';
 
 function PasswordStrength({ password }: { password: string }) {
@@ -32,22 +33,34 @@ export default function SignupPage() {
     const [form, setForm] = useState({ email: '', password: '', confirm: '' });
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const { toast } = useToast();
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (form.password !== form.confirm) {
-            setError('Passwords do not match');
+            toast({
+                title: 'Validation Error',
+                description: 'Passwords do not match.',
+                variant: 'destructive',
+            });
             return;
         }
         setLoading(true);
-        setError('');
         try {
             await apiSignup(form.email, form.password);
             setPendingEmail(form.email);
+            toast({
+                title: 'Success',
+                description: 'Account created! Please check your email for the OTP.',
+                variant: 'success',
+            });
             router.push('/auth/verify-otp');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Signup failed. Please try again.');
+            toast({
+                title: 'Signup Failed',
+                description: err.response?.data?.message || 'Something went wrong. Please try again.',
+                variant: 'destructive',
+            });
         } finally {
             setLoading(false);
         }
@@ -69,10 +82,6 @@ export default function SignupPage() {
                         <h1 className="text-2xl font-bold text-white">Create your account</h1>
                         <p className="text-zinc-400 text-sm mt-1">Start shortening links for free</p>
                     </div>
-
-                    {error && (
-                        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
-                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
