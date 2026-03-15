@@ -82,9 +82,9 @@ graph TD
    ```
 
 2. **Configure Environment**:
-   Initialize your `.env` file (the `docker-compose.yml` uses `.env.prod` by default for infrastructure).
+   Initialize your `.env` file (the `docker-compose.yml` uses `.env` by default for infrastructure).
    ```bash
-   cp .env.prod .env
+   cp .env
    ```
 
 3. **Start the Stack**:
