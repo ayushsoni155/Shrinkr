@@ -89,7 +89,7 @@ graph TD
 
 3. **Start the Stack**:
    ```bash
-   docker-compose up --build -d
+   docker compose --env-file .env  up --build -d
    ```
 
 4. **Access the App**:
